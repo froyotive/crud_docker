@@ -1,15 +1,27 @@
 # Docker Compose Version Compatibility Fix
 
-## Issue Fixed
+## Issues Fixed
+
+### 1. Docker Compose Command Not Found
 
 **Error:**
 ```bash
 ./docker/scripts/deploy.sh: line 31: docker-compose: command not found
 ```
 
-## Root Cause
+**Root Cause:** The deployment scripts were using the older Docker Compose V1 command (`docker-compose`) which is not available on systems with Docker Compose V2 (which uses `docker compose` with a space).
 
-The deployment scripts were using the older Docker Compose V1 command (`docker-compose`) which is not available on systems with Docker Compose V2 (which uses `docker compose` with a space).
+### 2. Missing PHP Extensions
+
+**Error:**
+```bash
+Problem 1
+  - filament/support v3.3.45 requires ext-intl * -> it is missing from your system.
+Problem 2
+  - openspout/openspout v4.32.0 requires ext-zip * -> it is missing from your system.
+```
+
+**Root Cause:** The Dockerfile was missing `intl` and `zip` PHP extensions required by Filament and OpenSpout packages.
 
 ## Solution
 
@@ -34,6 +46,11 @@ All deployment scripts now automatically detect which version of Docker Compose 
 - **NEW FILE** - Previously only Windows (dev.ps1) was available
 - Same automatic detection feature
 - Configured for development environment
+
+### 4. `Dockerfile` (PHP Extensions)
+- Added `libzip-dev` and `libicu-dev` system libraries
+- Added `zip` and `intl` PHP extensions
+- Extensions now include: pdo_mysql, mbstring, exif, pcntl, bcmath, gd, zip, intl
 
 ## How It Works
 
@@ -78,6 +95,52 @@ if ($LASTEXITCODE -eq 0) {
 # Then use it like:
 Invoke-Expression "$DOCKER_COMPOSE up -d --build"
 ```
+
+### Dockerfile PHP Extensions Fix
+
+**Previous Version (Missing Extensions):**
+```dockerfile
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    nodejs \
+    npm
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+```
+
+**Updated Version (With intl and zip):**
+```dockerfile
+# Install system dependencies including intl and zip libraries
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    libicu-dev \
+    zip \
+    unzip \
+    nodejs \
+    npm
+
+# Install PHP extensions including intl and zip
+RUN docker-php-ext-configure intl \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl
+```
+
+**Why These Extensions Are Required:**
+- `ext-intl`: Required by Filament for internationalization (i18n) features
+- `ext-zip`: Required by OpenSpout for reading/writing Excel and CSV files
+- Without these extensions, `composer install` will fail during Docker build
 
 ## Testing
 
