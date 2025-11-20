@@ -13,7 +13,9 @@ services:
     ports:
       - "${DB_PORT:-3306}:3306"
     networks:
-      - crud_network  # PHP-FPM Service
+      - crud_network
+
+  # PHP-FPM Service
   app:
     build:
       context: .
