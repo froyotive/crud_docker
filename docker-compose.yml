@@ -7,25 +7,13 @@ services:
     environment:
       MYSQL_DATABASE: ${DB_DATABASE:-crud}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret_password}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-secret_password}
-      MYSQL_USER: ${DB_USERNAME:-crud_user}
-      SERVICE_TAGS: dev
-      SERVICE_NAME: mysql
     volumes:
       - mysql_data:/var/lib/mysql
       - ./docker/mysql/init:/docker-entrypoint-initdb.d
     ports:
       - "${DB_PORT:-3306}:3306"
     networks:
-      - crud_network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
-      interval: 10s
-      start_period: 30s
-
-  # PHP-FPM Service
+      - crud_network  # PHP-FPM Service
   app:
     build:
       context: .
@@ -39,15 +27,88 @@ services:
     networks:
       - crud_network
     depends_on:
-      mysql:
-        condition: service_healthy
+      - mysql
     environment:
-      - DB_HOST=mysql
-      - DB_DATABASE=${DB_DATABASE:-crud}
-      - DB_USERNAME=${DB_USERNAME:-root}
-      - DB_PASSWORD=${DB_PASSWORD:-secret_password}
+      # Application
+      - APP_NAME=${APP_NAME:-Laravel}
       - APP_ENV=${APP_ENV:-production}
+      - APP_KEY=${APP_KEY:-base64:Ag72T2W8a/09K0gO+wrGHcwp+CFkKsGsHWlpWM+X9H4=}
       - APP_DEBUG=${APP_DEBUG:-false}
+      - APP_URL=${APP_URL:-http://localhost:8000}
+      
+      # Localization
+      - APP_LOCALE=${APP_LOCALE:-en}
+      - APP_FALLBACK_LOCALE=${APP_FALLBACK_LOCALE:-en}
+      - APP_FAKER_LOCALE=${APP_FAKER_LOCALE:-en_US}
+      
+      # Maintenance
+      - APP_MAINTENANCE_DRIVER=${APP_MAINTENANCE_DRIVER:-file}
+      
+      # Security
+      - BCRYPT_ROUNDS=${BCRYPT_ROUNDS:-12}
+      
+      # Logging
+      - LOG_CHANNEL=${LOG_CHANNEL:-stack}
+      - LOG_STACK=${LOG_STACK:-single}
+      - LOG_DEPRECATIONS_CHANNEL=${LOG_DEPRECATIONS_CHANNEL:-null}
+      - LOG_LEVEL=${LOG_LEVEL:-error}
+      
+      # Database
+      - DB_CONNECTION=${DB_CONNECTION:-mysql}
+      - DB_HOST=mysql
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_DATABASE=${DB_DATABASE:-crud}
+      - DB_USERNAME=root
+      - DB_PASSWORD=${DB_PASSWORD:-secret_password}
+      
+      # Session
+      - SESSION_DRIVER=${SESSION_DRIVER:-database}
+      - SESSION_LIFETIME=${SESSION_LIFETIME:-120}
+      - SESSION_ENCRYPT=${SESSION_ENCRYPT:-false}
+      - SESSION_PATH=${SESSION_PATH:-/}
+      - SESSION_DOMAIN=${SESSION_DOMAIN:-null}
+      
+      # Broadcasting & Queue
+      - BROADCAST_CONNECTION=${BROADCAST_CONNECTION:-log}
+      - QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
+      
+      # Filesystem
+      - FILESYSTEM_DISK=${FILESYSTEM_DISK:-local}
+      
+      # Cache
+      - CACHE_STORE=${CACHE_STORE:-database}
+      
+      # Memcached
+      - MEMCACHED_HOST=${MEMCACHED_HOST:-127.0.0.1}
+      
+      # Redis
+      - REDIS_CLIENT=${REDIS_CLIENT:-phpredis}
+      - REDIS_HOST=${REDIS_HOST:-127.0.0.1}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-null}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      
+      # Mail
+      - MAIL_MAILER=${MAIL_MAILER:-log}
+      - MAIL_SCHEME=${MAIL_SCHEME:-null}
+      - MAIL_HOST=${MAIL_HOST:-127.0.0.1}
+      - MAIL_PORT=${MAIL_PORT:-2525}
+      - MAIL_USERNAME=${MAIL_USERNAME:-null}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-null}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-hello@example.com}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-${APP_NAME}}
+      
+      # AWS
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AWS_BUCKET=${AWS_BUCKET:-}
+      - AWS_USE_PATH_STYLE_ENDPOINT=${AWS_USE_PATH_STYLE_ENDPOINT:-false}
+      
+      # Vite
+      - VITE_APP_NAME=${VITE_APP_NAME:-${APP_NAME}}
+      
+      # Admin Registration
+      - ADMIN_REGISTRATION_CODE=${ADMIN_REGISTRATION_CODE:-AdminNihBro}
 
   # Nginx Service
   nginx:
