@@ -15,6 +15,10 @@
 **Problem**: Build failed because `ext-intl` and `ext-zip` were missing  
 **Solution**: Updated Dockerfile to install required extensions for Filament and OpenSpout
 
+### 3. ✅ PHP Version Compatibility
+**Problem**: `openspout/openspout` v4.32.0 requires PHP 8.3+ but Docker image used PHP 8.2  
+**Solution**: Updated Dockerfile from PHP 8.2-fpm to PHP 8.3-fpm
+
 ---
 
 ## 📝 Files Updated
@@ -24,7 +28,7 @@
 | `docker/scripts/deploy.sh` | ✅ Auto-detect Docker Compose version |
 | `docker/scripts/deploy.ps1` | ✅ Auto-detect Docker Compose version |
 | `docker/scripts/dev.sh` | ✅ Created new development script for Linux/Mac |
-| `Dockerfile` | ✅ Added `intl` and `zip` PHP extensions |
+| `Dockerfile` | ✅ Added `intl` and `zip` PHP extensions, upgraded to PHP 8.3 |
 | `DOCKER_COMPOSE_VERSION_FIX.md` | ✅ Updated documentation |
 | `DOCKER_DEPLOYMENT.md` | ✅ Updated prerequisites note |
 

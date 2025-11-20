@@ -23,6 +23,16 @@ Problem 2
 
 **Root Cause:** The Dockerfile was missing `intl` and `zip` PHP extensions required by Filament and OpenSpout packages.
 
+### 3. PHP Version Incompatibility
+
+**Error:**
+```bash
+Problem 1
+  - openspout/openspout v4.32.0 requires php ~8.3.0 || ~8.4.0 || ~8.5.0 -> your php version (8.2.29) does not satisfy that requirement.
+```
+
+**Root Cause:** The locked version of `openspout/openspout` (v4.32.0) requires PHP 8.3 or higher, but the Dockerfile was using PHP 8.2-fpm.
+
 ## Solution
 
 All deployment scripts now automatically detect which version of Docker Compose is installed and use the appropriate command:
@@ -50,6 +60,7 @@ All deployment scripts now automatically detect which version of Docker Compose 
 ### 4. `Dockerfile` (PHP Extensions)
 - Added `libzip-dev` and `libicu-dev` system libraries
 - Added `zip` and `intl` PHP extensions
+- **Upgraded from PHP 8.2-fpm to PHP 8.3-fpm** for openspout compatibility
 - Extensions now include: pdo_mysql, mbstring, exif, pcntl, bcmath, gd, zip, intl
 
 ## How It Works
@@ -118,6 +129,12 @@ RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
 **Updated Version (With intl and zip):**
 ```dockerfile
+# Use PHP 8.3 for openspout compatibility
+FROM php:8.3-fpm
+
+# Set working directory
+WORKDIR /var/www/html
+
 # Install system dependencies including intl and zip libraries
 RUN apt-get update && apt-get install -y \
     git \
@@ -137,10 +154,11 @@ RUN docker-php-ext-configure intl \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl
 ```
 
-**Why These Extensions Are Required:**
+**Why These Changes Are Required:**
 - `ext-intl`: Required by Filament for internationalization (i18n) features
 - `ext-zip`: Required by OpenSpout for reading/writing Excel and CSV files
-- Without these extensions, `composer install` will fail during Docker build
+- `PHP 8.3`: Required by openspout/openspout v4.32.0 (composer.lock dependency)
+- Without these, `composer install` will fail during Docker build
 
 ## Testing
 
