@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Bash Deployment Script for Linux/Mac
-# Make executable: chmod +x docker/scripts/deploy.sh
-# Run with: ./docker/scripts/deploy.sh
+# Bash Development Setup Script for Linux/Mac
+# Make executable: chmod +x docker/scripts/dev.sh
+# Run with: ./docker/scripts/dev.sh
 
-echo "🚀 Starting deployment..."
+echo "🚀 Starting development environment setup..."
 echo ""
 
 # Check if Docker is running
@@ -26,16 +26,26 @@ else
     exit 1
 fi
 
-# Copy .env.docker to .env
+# Copy .env.docker to .env if not exists
 echo ""
 echo "📝 Setting up environment..."
-if [ -f ".env.docker" ]; then
-    cp .env.docker .env
-    echo "✅ Environment file created"
+if [ ! -f ".env" ]; then
+    if [ -f ".env.docker" ]; then
+        cp .env.docker .env
+        echo "✅ Environment file created from .env.docker"
+    else
+        echo "❌ .env.docker not found!"
+        exit 1
+    fi
 else
-    echo "❌ .env.docker not found!"
-    exit 1
+    echo "✅ .env already exists"
 fi
+
+# Update .env for development
+echo "🔧 Configuring for development..."
+sed -i 's/APP_ENV=production/APP_ENV=local/' .env 2>/dev/null || sed -i '' 's/APP_ENV=production/APP_ENV=local/' .env
+sed -i 's/APP_DEBUG=false/APP_DEBUG=true/' .env 2>/dev/null || sed -i '' 's/APP_DEBUG=false/APP_DEBUG=true/' .env
+echo "✅ Development configuration set"
 
 # Stop existing containers
 echo ""
@@ -84,7 +94,7 @@ echo "✅ MySQL is ready"
 # Run migrations
 echo ""
 echo "🗄️  Running migrations..."
-$DOCKER_COMPOSE exec -T app php artisan migrate --force
+$DOCKER_COMPOSE exec -T app php artisan migrate
 
 if [ $? -ne 0 ]; then
     echo "❌ Migration failed"
@@ -95,7 +105,7 @@ echo "✅ Migrations completed"
 # Seed database
 echo ""
 echo "🌱 Seeding database..."
-$DOCKER_COMPOSE exec -T app php artisan db:seed --class=AdminUserSeeder --force
+$DOCKER_COMPOSE exec -T app php artisan db:seed --class=AdminUserSeeder
 
 if [ $? -eq 0 ]; then
     echo "✅ Database seeded"
@@ -103,14 +113,15 @@ else
     echo "⚠️  Seeding failed (may already exist)"
 fi
 
-# Clear and cache configuration
+# Clear caches
 echo ""
-echo "🧹 Optimizing application..."
-$DOCKER_COMPOSE exec -T app php artisan config:cache
-$DOCKER_COMPOSE exec -T app php artisan route:cache
-$DOCKER_COMPOSE exec -T app php artisan view:cache
+echo "🧹 Clearing caches..."
+$DOCKER_COMPOSE exec -T app php artisan config:clear
+$DOCKER_COMPOSE exec -T app php artisan cache:clear
+$DOCKER_COMPOSE exec -T app php artisan route:clear
+$DOCKER_COMPOSE exec -T app php artisan view:clear
 
-echo "✅ Optimization completed"
+echo "✅ Caches cleared"
 
 # Set permissions
 echo ""
@@ -122,18 +133,24 @@ echo "✅ Permissions set"
 # Display status
 echo ""
 echo "============================================================"
-echo "✅ Deployment completed successfully!"
+echo "✅ Development environment ready!"
 echo "============================================================"
 echo ""
-echo "🌐 Application is running at: http://localhost:8000"
+echo "🌐 Application: http://localhost:8000"
 echo "🔐 Admin Panel: http://localhost:8000/admin"
 echo ""
 echo "📊 Default accounts:"
 echo "   👤 Admin: admin@example.com / password"
 echo "   👤 User:  user@example.com / password"
 echo ""
-echo "📝 Useful commands:"
-echo "   $DOCKER_COMPOSE ps          # Check services status"
-echo "   $DOCKER_COMPOSE logs -f     # View logs"
-echo "   $DOCKER_COMPOSE down        # Stop services"
+echo "📝 Development commands:"
+echo "   $DOCKER_COMPOSE logs -f app          # Watch application logs"
+echo "   $DOCKER_COMPOSE exec app php artisan tinker  # Laravel REPL"
+echo "   $DOCKER_COMPOSE exec app bash        # Access container shell"
+echo ""
+echo "🔄 To rebuild assets:"
+echo "   $DOCKER_COMPOSE run --rm node npm run dev"
+echo ""
+echo "🛑 To stop:"
+echo "   $DOCKER_COMPOSE down"
 echo ""

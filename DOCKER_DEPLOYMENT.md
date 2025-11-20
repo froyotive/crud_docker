@@ -7,10 +7,12 @@ Panduan lengkap untuk deploy Laravel CRUD application dengan Docker dan MySQL.
 ## 📋 Prerequisites
 
 - ✅ **Docker Desktop** installed (Windows/Mac/Linux)
-- ✅ **Docker Compose** v2.0+
+- ✅ **Docker Compose** v2.0+ (or docker-compose v1.x)
 - ✅ **Git** (untuk clone repository)
 - ✅ Minimal 4GB RAM untuk containers
 - ✅ Port 8000 dan 3306 harus tersedia
+
+> **Note:** Scripts automatically detect whether you're using Docker Compose V1 (`docker-compose`) or V2 (`docker compose`) and use the appropriate command.
 
 ### Install Docker Desktop
 
@@ -56,8 +58,9 @@ cd crud
 git clone <your-repo-url>
 cd crud
 
-# 2. Make script executable
+# 2. Make scripts executable
 chmod +x docker/scripts/deploy.sh
+chmod +x docker/scripts/dev.sh
 
 # 3. Run deployment
 ./docker/scripts/deploy.sh
