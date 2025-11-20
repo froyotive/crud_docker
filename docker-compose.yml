@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # MySQL Database
   mysql:
@@ -21,10 +19,11 @@ services:
     networks:
       - crud_network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-secret_password}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
       interval: 10s
+      start_period: 30s
 
   # PHP-FPM Service
   app:
